@@ -53,7 +53,7 @@ namespace My.Functions
             if(string.IsNullOrEmpty(id)) {
                 responseMessage = "You need to enter in the product Id to get the flavor";
             } else {
-                responseMessage = $"The product name for your product id {id} is Starfruit Explosion!! ";
+                responseMessage = $"The product name for your product id {id} is Starfruit Explosion";
                 msg.Add(string.Format("Product ID passed to the function: {0}", id));
             }
 
