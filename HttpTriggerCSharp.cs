@@ -36,7 +36,7 @@ namespace My.Functions
             return new OkObjectResult(responseMessage);
         }
 
-        [FunctionName("GetFlavaName")]
+        [FunctionName("GetFlava")]
         public static async Task<IActionResult> GetFlava(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req, 
             [Queue("outqueue"),StorageAccount("AzureWebJobsStorage")] ICollector<string> msg,
