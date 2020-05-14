@@ -7,11 +7,15 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq; 
 
 namespace My.Functions
 {
     public static class GreatestICFlavas
     {
+        const string getProductUri = "https://serverlessohproduct.trafficmanager.net/api/GetProduct?productId={0}";
+        const string getUserUri = "https://serverlessohuser.trafficmanager.net/api/GetUser?userId={0}";
+
         [FunctionName("SaveName")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req, 
@@ -58,6 +62,37 @@ namespace My.Functions
             }
 
             return new OkObjectResult(responseMessage);
+        }
+
+        [FunctionName("CreateRating")]
+        public static async Task<IActionResult> CreateRating(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req, 
+            [Queue("outqueue"),StorageAccount("AzureWebJobsStorage")] ICollector<string> msg,
+            ILogger log)
+        {
+            log.LogInformation("Create Ice Cream Rating triggered");
+            
+            //check valid user and product id
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            JToken obj = JObject.Parse(requestBody);
+            string uId = (string)obj.SelectToken("userId");
+            string pId = (string)obj.SelectToken("productId");      
+            var httpClient = new System.Net.Http.HttpClient();
+            var userResp = await httpClient.GetAsync(String.Format(getUserUri, uId));
+            var prodResp = await httpClient.GetAsync(String.Format(getProductUri, pId));
+
+            try {
+                dynamic data = JsonConvert.DeserializeObject(requestBody);
+                data.id = new Guid();
+                data.timeStamp = new DateTime().ToUniversalTime();
+                
+                return new OkObjectResult(JsonConvert.SerializeObject(data));
+
+            } catch {
+                return new OkObjectResult("Failed to retrieve either the userId or the productId");
+            }
+
+            
         }
     }
 }
